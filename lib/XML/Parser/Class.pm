@@ -5,9 +5,6 @@ use parent XML::Parser::Expat;
 
 sub new {
   my($package) = shift;
-  my $p;
-  my $s = $p = XML::Parser::Expat->new;
-
   my @st;
   while (my ($symbol_table_key, $val) = each %{ *{ "$package\::" } }) {
     local *ENTRY = $val;
@@ -20,14 +17,15 @@ sub new {
       $dispatch{$+{what}}{$+{who}}=$_->[1];
     }
   }
-  bless($s,$package);
-  $p->setHandlers(__gen_dispatch(\%dispatch, $s));
+  my $s = bless(XML::Parser::Expat->new,$package);
+# not sure if reblessing is appropriate here... otherwise i'd have to go the AUTOLOAD-route and then I'll have to do some ugly switches in the dispatch methods.
+  $s->setHandlers($s->__gen_dispatch(\%dispatch));
   return $s;
 }
 
 sub __gen_dispatch{
   die "Do you know what privacy means?" if (caller)[0] ne __PACKAGE__;
-  my ($dispatch,$s) = @_;
+  my ($s,$dispatch) = @_;
   my %ret;
   foreach my $se (qw|Start End|) {
     if ($dispatch->{$se}) {
@@ -35,16 +33,22 @@ sub __gen_dispatch{
 	$ret{$se} = sub {
 	  if ($dispatch->{$se}{$_[1]}) {
 	    $dispatch->{$se}{$_[1]}->(@_);
+	  }elsif(defined $dispatch->{$se}{''}){
+	    $dispatch->{$se}{''}(@_);
 	  }
 	}
       } else {
 	foreach (keys %{$dispatch->{$se}}) {
-	  $dispatch->{$se}{$s->transform_gi($_)} = $dispatch->{$se}{$_};
-	  delete $dispatch->{$se}{$_};
+	  if ($_ ne $s->transform_gi($_)){
+	    $dispatch->{$se}{$s->transform_gi($_)} = $dispatch->{$se}{$_};
+	    delete $dispatch->{$se}{$_};
+	  }
 	}
 	$ret{$se} = sub {
 	  if ($dispatch->{$se}{$s->transform_gi($_[1])}) {
 	    $dispatch->{$se}{$s->transform_gi($_[1])}->(@_);
+	  }elsif(defined $dispatch->{$se}{''}){
+	    $dispatch->{$se}{''}(@_);
 	  }
 	}
       }
