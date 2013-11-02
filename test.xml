@@ -1,0 +1,8 @@
+<tests>
+    <Test foo="bar">
+      wherever
+    </Test>
+    <test>
+      What &#x0A; up
+    </test>
+</tests>
