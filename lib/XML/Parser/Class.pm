@@ -5,7 +5,6 @@ use parent XML::Parser::Expat;
 
 sub new {
   my($package) = shift;
-  my %options = @_;
   my $p;
   my $s = $p = XML::Parser::Expat->new;
 
@@ -21,28 +20,33 @@ sub new {
       $dispatch{$+{what}}{$+{who}}=$_->[1];
     }
   }
-
-  $p->setHandlers(__gen_dispatch(\%options,\%dispatch, $s));
-  return bless($s,$package);
+  bless($s,$package);
+  $p->setHandlers(__gen_dispatch(\%dispatch, $s));
+  return $s;
 }
 
 sub __gen_dispatch{
   die "Do you know what privacy means?" if (caller)[0] ne __PACKAGE__;
-  my ($opt, $dispatch,$s) = @_;
+  my ($dispatch,$s) = @_;
   my %ret;
-  foreach my $se (qw|Start End|){
-    if ($dispatch->{$se}){
-      if ($opt->{case_sensitive} ){
+  foreach my $se (qw|Start End|) {
+    if ($dispatch->{$se}) {
+      if (not $s->can('transform_gi')) {
 	$ret{$se} = sub {
 	  if ($dispatch->{$se}{$_[1]}) {
-	    $dispatch->{$se}{$_[1]}->($s,@_[1..$#_]);
-	  }}
-      }else{
-	$dispatch->{$se}{(lc)} = $dispatch->{$se}{$_} 
-	  foreach keys %{$dispatch->{$se}};
-	$ret{$se} = sub {if ($dispatch->{$se}{lc $_[1]}) {
-	  $dispatch->{$se}{lc $_[1]}->($s,@_[1..$#_]);
-	}}
+	    $dispatch->{$se}{$_[1]}->(@_);
+	  }
+	}
+      } else {
+	foreach (keys %{$dispatch->{$se}}) {
+	  $dispatch->{$se}{$s->transform_gi($_)} = $dispatch->{$se}{$_};
+	  delete $dispatch->{$se}{$_};
+	}
+	$ret{$se} = sub {
+	  if ($dispatch->{$se}{$s->transform_gi($_[1])}) {
+	    $dispatch->{$se}{$s->transform_gi($_[1])}->(@_);
+	  }
+	}
       }
     }
   }
@@ -51,5 +55,3 @@ sub __gen_dispatch{
   }
   return %ret;
 }
-
-sub setHandlers{...} # no dumb ideas allowed
