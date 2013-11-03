@@ -23,7 +23,8 @@ sub handler_arguments{
 }
 
 sub reset_handlers{
-  my $s = shift;
-  delete $s->{__testparser_handlers_visited}{$_} 
-    foreach keys %{$s->{__testparser_handlers_visited}};
+  my ($package, @names) = @_;
+  foreach my $name (@names){
+    undef *{t::testparser::}->{$name}
+  }
 }

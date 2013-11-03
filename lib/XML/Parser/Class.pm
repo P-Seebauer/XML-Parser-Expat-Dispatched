@@ -12,15 +12,18 @@ sub new {
     local *ENTRY = $val;
     if (defined $val 
 	and defined *ENTRY{ CODE }
-	and $symbol_table_key =~ /^(?:(?'what'Start|End)_?(?'who'.*)
-		    |(?'who'.*?)_?(?'what'handler))$/x){
+	and $symbol_table_key =~ /^(?:(?'who'.*?)_?(?'what'handler)
+				  |(?'what'Start|End)_?(?'who'.*))$/x){
       carp "the sub $symbol_table_key overrides the handler for $dispatch{$+{what}}{$+{who}}[1]"
 	if exists $dispatch{$+{what}}{$+{who}};
       $dispatch{$+{what}}{$+{who}}= [*ENTRY{ CODE }, $symbol_table_key];
     }
   }
   my $s = bless(XML::Parser::Expat->new(@_),$package);
-# not sure if reblessing is appropriate here... otherwise i'd have to go the AUTOLOAD-route and then I'll have to do some ugly switches in the dispatch methods.
+  foreach (qw(Start End)) {
+    croak "$_ dispatch and $_\_handler declared"
+      if exists $dispatch{handler}{$_} and $dispatch{$_};
+  }
   $s->setHandlers($s->__gen_dispatch(\%dispatch));
   return $s;
 }
