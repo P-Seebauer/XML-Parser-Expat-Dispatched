@@ -58,8 +58,6 @@ sub __gen_dispatch{
       }
     }
   }
-  foreach my $handler (keys %{$dispatch->{handler}}){
-    $ret{$handler} = sub{$dispatch->{handler}{$handler}[0]($s,$_[1..$#_])}
-  }
+  $ret{$_} = $dispatch->{handler}{$_}[0] foreach keys %{$dispatch->{handler}};
   return %ret;
 }
