@@ -1,4 +1,4 @@
-package XML::Parser::Class;
+package XML::Parser::Expat::Dispatched;
 
 use true;
 use parent XML::Parser::Expat;
@@ -32,7 +32,8 @@ sub __gen_dispatch{
   my %ret;
   foreach my $se (qw|Start End|) {
     if ($dispatch->{$se}) {
-      if (not $s->can('transform_gi')) { # the alternative would be to have a generic transform_gi sub, i don't want that, because it's much slower.
+      if (not $s->can('transform_gi')) {
+	# the alternative would be to have a generic transform_gi sub, i don't want that, because it's much slower.
 	$ret{$se} = sub {
 	  if ($dispatch->{$se}{$_[1]}) {
 	    $dispatch->{$se}{$_[1]}[0](@_);

@@ -1,7 +1,6 @@
 package t::testparser2;
 use true;
-use parent XML::Parser::Class;
-
+use parent XML::Parser::Expat::Dispatched;
 
 sub init{
   my ($package, @names) = @_;
