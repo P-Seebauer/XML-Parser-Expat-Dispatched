@@ -6,7 +6,6 @@ use Carp;
 
 sub new {
   my($package) = shift;
-  my @st;
   my %dispatch;
   while (my ($symbol_table_key, $val) = each %{ *{ "$package\::" } }) {
     local *ENTRY = $val;
@@ -22,7 +21,7 @@ sub new {
   my $s = bless(XML::Parser::Expat->new(@_),$package);
   foreach (qw(Start End)) {
     croak "$_ dispatch and $_\_handler declared"
-      if exists $dispatch{handler}{$_} and $dispatch{$_};
+      if $dispatch{$_} and exists $dispatch{handler}{$_};
   }
   $s->setHandlers($s->__gen_dispatch(\%dispatch));
   return $s;
