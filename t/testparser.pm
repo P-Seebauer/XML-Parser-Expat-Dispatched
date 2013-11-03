@@ -9,7 +9,7 @@ sub init{
     if ('CODE' ne ref $name){
       *{"t::testparser::$name"} = sub {
 	my $s = shift;
-	$s->{__testparser_handlers_visited}{$name}=[@_];
+	push @{$s->{__testparser_handlers_visited}{$name}},[@_];
       }
     } else{
       *t::testparser::transform_gi=$name;
