@@ -14,6 +14,8 @@ sub new {
 	and defined *ENTRY{ CODE }
 	and $symbol_table_key =~ /^(?:(?'what'Start|End)_?(?'who'.*)
 		    |(?'who'.*?)_?(?'what'handler))$/x){
+      carp "the sub $symbol_table_key overrides the handler for $dispatch{$+{what}}{$+{who}}[1]"
+	if exists $dispatch{$+{what}}{$+{who}};
       $dispatch{$+{what}}{$+{who}}= [*ENTRY{ CODE }, $symbol_table_key];
     }
   }
@@ -40,7 +42,7 @@ sub __gen_dispatch{
 	foreach (keys %{$dispatch->{$se}}) {
 	  my $new_key=$s->transform_gi($_);
 	  if ($_ ne $new_key){
-	    carp "there is already an handler for \l$se $new_key installed, overwriting it with $dispatch->{$se}{$_}[1]"
+	    carp "$dispatch->{$se}{$new_key}[1] and $dispatch->{$se}{$_}[1] translate to the same handler"
 	      if exists $dispatch->{$se}{$new_key};
 	    $dispatch->{$se}{$new_key} = $dispatch->{$se}{$_};
 	    delete $dispatch->{$se}{$_};
