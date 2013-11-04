@@ -41,7 +41,7 @@ sub __gen_dispatch{
 	}
       } else {
 	foreach (keys %{$dispatch->{$se}}) {
-	  my $new_key=$s->transform_gi($_);
+	  my $new_key=$s->transform_gi($_,1);
 	  if ($_ ne $new_key){
 	    carp "$dispatch->{$se}{$new_key}[1] and $dispatch->{$se}{$_}[1] translate to the same handler"
 	      if exists $dispatch->{$se}{$new_key};
@@ -50,8 +50,8 @@ sub __gen_dispatch{
 	  }
 	}
 	$ret{$se} = sub {
-	  if ($dispatch->{$se}{$s->transform_gi($_[1])}) {
-	    $dispatch->{$se}{$s->transform_gi($_[1])}[0](@_);
+	  if ($dispatch->{$se}{$s->transform_gi($_[1],0)}) {
+	    $dispatch->{$se}{$s->transform_gi($_[1],0)}[0](@_);
 	  }elsif(defined $dispatch->{$se}{''}){
 	    $dispatch->{$se}{''}[0](@_);
 	  }
@@ -109,17 +109,16 @@ Version 0.9
 
 =head1 Description
 
-This package provides a C<new> method that produces some dispatch methods from the symbol table of your module. 
-These will then be installed into the handlers of an L<XML::Parser::Expat|XML::Parser::Expat>.
-
-=head2 API
-
 You simply write subroutines.
 Your parser will be a L<XML::Parser::Expat|XML::Parser::Expat> so consider
 checking the Methods of this class if you write other methods than handler methods.
-The underscore in the subroutine names is optional for all but the tranform_gi method.
+The underscore in the subroutine names is optional for all but the transform_gi method.
 The arguments your subroutine gets called with are the same as those for the handlers from
-L<XML::Parser::Expat|XML::Parser::Expat>
+L<XML::Parser::Expat|XML::Parser::Expat>.
+This package provides a C<new> method that produces some dispatch methods from the symbol table of your module.
+These will then be installed into the handlers of an L<XML::Parser::Expat|XML::Parser::Expat>.
+If you want to write your own new method, make sure that this modules C<new> method get's called.
+
 
 =head3 Start_I<tagname>
 
@@ -133,23 +132,40 @@ If I<tagname> is not given (when your sub is called C<End> or C<End_>), it works
 
 =head3 I<Handler>_handler
 
-Installs this subroutine as a handler for L<XML::Parser::Expat|XML::Parser::Expat>. 
-You can see the Handler names on L<XML::Parser::Expat>.
+Instalpls this subroutine as a handler for L<XML::Parser::Expat|XML::Parser::Expat>. 
+You can see the Handler names on L<XML::Parser::Expat>. Notice that if you try to define a handler for Start or End,
+they will be interpreted as Start or End handlers for C<handler>-tags, use subs called C<Start> or C<End> instead.
 
-=head3 transform_gi (Parser, Suffix/Tagname)
 
-This subroutine is special: you can use it to generalize the check 
+=head3 transform_gi (Parser, Suffix/Tagname, isSuffix)
+
+This subroutine is special: you can use it to generalize the check
 between the subroutine suffix for the C<Start*> and C<End*> subroutine names
 and the tagnames.
 
 Some Examples:
 
     sub transform_gi{lc $_[1]}                            # case insensitive
-    sub transform_gi{return $_[1]=~/:([^:]+)$/?$1: $_[1]} # try discarding the namespace
+    sub transform_gi{return !$_[2] && $_[1]=~/:([^:]+)$/?$1: $_[1]} # try discarding the namespace
 
 Notice that the allowed characters for perl's subroutines
 and XML-Identifiers aren't the same so you might want to use the default handlers or transform_gi.
 
+=head1 Diagnostics
+
+  the sub %s1 overrides the handler for %s2
+
+You most probably have two subroutines that
+have the same name exept one with an underscore and one without.
+The warning issued tells you wich subroutine will be used as a handler.
+Since the underlying mechanism is based on the C<each> iterator, this behavior
+can vary from time to time playing, so you might want to change your sub names.
+
+  %s1 and %s2 translate to the same handler
+
+There is an sub called %s1 that translates to the same handler as a sub %s2 after applying C<transform_gi>. The sub %s1 will be used.
+
+If you overwrite __gen_dispatch this module doesn't work.
 
 =head1 Author
 
