@@ -163,7 +163,7 @@ can vary from time to time playing, so you might want to change your sub names.
 
   %s1 and %s2 translate to the same handler
 
-There is an sub called %s1 that translates to the same handler as a sub %s2 after applying C<transform_gi>. The sub %s1 will be used.
+There is an sub called C<%s1> that translates to the same handler as a sub C<%s2> after applying C<transform_gi>. The sub C<%s1> will be used.
 
 If you overwrite __gen_dispatch this module doesn't work.
 
