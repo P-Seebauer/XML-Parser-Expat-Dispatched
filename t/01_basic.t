@@ -3,7 +3,8 @@ use Test::More;
 
 my (@good_names, @bad_names);
 BEGIN {
-@good_names = qw| Start_foo  Startbar End End_test Char_handler|;
+@good_names = qw| Start_foo  Startbar Start End End_test 
+	          Char_handler Start_handler Endhandler|;
 @bad_names  = qw| start_test EndBar|;
 plan (tests => @good_names+@bad_names+2);
 use_ok 't::testparser'
@@ -17,6 +18,7 @@ $p->parse(<<'EOXML');
 <foo></foo>
 <bar></bar>
 <test></test>
+<handler/>
 </tests>
 EOXML
 
