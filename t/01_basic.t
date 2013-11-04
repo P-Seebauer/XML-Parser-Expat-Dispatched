@@ -4,7 +4,7 @@ use Test::More;
 my (@good_names, @bad_names);
 BEGIN {
 @good_names = qw| Start_foo  Startbar End End_test Char_handler|;
-@bad_names  = qw| start_test EndBar End_Bar|;
+@bad_names  = qw| start_test EndBar|;
 plan (tests => @good_names+@bad_names+2);
 use_ok 't::testparser'
 }
