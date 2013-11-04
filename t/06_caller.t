@@ -3,7 +3,7 @@ use Test::More;
 my (@handler_names);
 BEGIN {
   @handler_names = qw| Start_foo Start End End_test Char_handler|;
-  plan (tests => 2 + @handler_names);
+  plan (tests => 4 + @handler_names);
   use_ok 't::testparser2'
 }
 
@@ -18,6 +18,10 @@ $p->parse(<<'EOXML');
 </tests>
 EOXML
 
+foreach(qw|XML::Parser::Expat::Dispatched XML::Parser::Expat|){
+  isa_ok($p,$_, 'Parser');
+}
+
 foreach (@handler_names) {
-  isa_ok($p->handler_arguments($_), 't::testparser2', "$_\_Caller");
+  is($p,$p->handler_arguments($_), "$_ gets called with the Parser")
 }
