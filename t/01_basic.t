@@ -22,9 +22,9 @@ $p->parse(<<'EOXML');
 </tests>
 EOXML
 
-foreach (@good_names) {
+foreach (sort @good_names) {
   ok('ARRAY' eq ref $p->handler_arguments($_), "$_ was called");
 }
-foreach (@bad_names) {
+foreach (sort @bad_names) {
   ok('ARRAY' ne ref $p->handler_arguments($_), "$_ wasn't called");
 }
