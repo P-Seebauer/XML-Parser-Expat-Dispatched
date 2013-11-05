@@ -3,3 +3,4 @@ test.pl
 test.xml
 MyParser.pm
 .build
+XML-Parser-Expat-Dispatched-*
