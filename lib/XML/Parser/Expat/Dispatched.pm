@@ -115,9 +115,11 @@ checking the Methods of this class if you write other methods than handler metho
 The underscore in the subroutine names is optional for all but the transform_gi method.
 The arguments your subroutine gets called with are the same as those for the handlers from
 L<XML::Parser::Expat|XML::Parser::Expat>.
-This package provides a C<new> method that produces some dispatch methods from the symbol table of your module.
+This package provides a C<new> method that produces some dispatch methods after reading the symbol table of your module, so be sure that your subroutines are actually in there when making the call to C<new>.
 These will then be installed into the handlers of an L<XML::Parser::Expat|XML::Parser::Expat>.
 If you want to write your own new method, make sure that this modules C<new> method get's called.
+
+Since your package will inherit L<XML::Parser::Expat|XML::Parser::Expat> be prepared to call it's C<release>-method if you write your own C<DESTROY>-method.
 
 
 =head3 Start_I<tagname>
@@ -132,7 +134,7 @@ If I<tagname> is not given (when your sub is called C<End> or C<End_>), it works
 
 =head3 I<Handler>_handler
 
-Instalpls this subroutine as a handler for L<XML::Parser::Expat|XML::Parser::Expat>. 
+Installs this subroutine as a handler for L<XML::Parser::Expat|XML::Parser::Expat>.
 You can see the Handler names on L<XML::Parser::Expat>. Notice that if you try to define a handler for Start or End,
 they will be interpreted as Start or End handlers for C<handler>-tags, use subs called C<Start> or C<End> instead.
 
