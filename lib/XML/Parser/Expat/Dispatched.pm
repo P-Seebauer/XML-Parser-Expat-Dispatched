@@ -1,5 +1,5 @@
 package XML::Parser::Expat::Dispatched;
-
+# ABSTRACT: Automagically dispatches subs to XML::Parser::Expat handlers
 use true;
 use parent XML::Parser::Expat;
 use Carp;
