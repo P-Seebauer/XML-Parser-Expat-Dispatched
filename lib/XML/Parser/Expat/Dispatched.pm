@@ -5,7 +5,7 @@ use true;
 use parent 'XML::Parser::Expat';
 use Carp;
 
-our $VERSION = 0.951;
+our $VERSION = 0.952;
 
 =head1 SYNOPSIS
 
