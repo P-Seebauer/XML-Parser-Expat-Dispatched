@@ -4,6 +4,8 @@ use strict;
 use true;
 use parent 'XML::Parser::Expat';
 use Carp;
+use 5.01;
+
 our $VERSION = 0.901;
 
 =head1 SYNOPSIS
@@ -43,81 +45,89 @@ our $VERSION = 0.901;
 
 sub new {
   my($package) = shift;
-  my ($opts, %dispatch);
-  {my $opts = 
-    {Start         => 'Start',
-     End           => 'End',
-     handler       => 'handler',
-     #transform_tag,
-     #transform_suffix,
-     #transform_both,
-    };
-  if($package->can('config_dispatched')){
-    my $config_opts = $package->config_dispatch;
-    $opts->{$_} = $config_opts->{$_} foreach keys %$config_opts;
-    foreach (qw|transform_tag transform_suffix|){
-      carp "both $_ and transform_both defined in config_dispatched, taking transform_both"
-	if exists $opts->{$_} and exists $opts->{transform_both}
-    }
-  }
-  my %opt_reversed = (map {$opts->{$_}, $_} qw|Start End handler|);
-
-  no strict 'refs';   # perlcritic doesn't like this
-   while (my ($symbol_table_key, $val) = each %{ *{ "$package\::" } }) {
-     local *ENTRY = $val;
-     if (defined $val
-	 and defined *ENTRY{ CODE }
-	 and $symbol_table_key =~ /^(?:(?'what'$opts->{Start}|$opts->{End})_?(?'who'.*)
-				   |(?'who'.*?)_?(?'what'$opts->{handler}))$/x){
-       my $what = $opt_reversed{$+{what}};
-       carp "the sub $symbol_table_key overrides the handler for $dispatch{$what}{$+{who}}[1]"
-	 if exists $dispatch{$what}{$+{who}};
-       $dispatch{$what}{$+{who}}= [*ENTRY{ CODE }, $symbol_table_key];
-     }
-   }
- }
-  my $s = bless(XML::Parser::Expat->new(@_),$package);
-  $s->setHandlers($s->__gen_dispatch(\%dispatch));
-  return $s;
-}
-
-sub __gen_dispatch{
-  my ($s,$dispatch) = @_;
-  my %ret;
-  foreach my $se (qw|Start End|) {
-    if ($dispatch->{$se}) {
-      if (not $s->can('transform_gi')) {
-	# the alternative would be to have a generic transform_gi sub, i don't want that, because it's much slower.
-	$ret{$se} = sub {
-	  if ($dispatch->{$se}{$_[1]}) {
-	    $dispatch->{$se}{$_[1]}[0](@_);
-	  }elsif(defined $dispatch->{$se}{''}){
-	    $dispatch->{$se}{''}[0](@_);
-	  }
-	}
-      } else {
-	foreach (keys %{$dispatch->{$se}}) {
-	  my $new_key=$s->transform_gi($_,1);
-	  if ($_ ne $new_key){
-	    carp "$dispatch->{$se}{$new_key}[1] and $dispatch->{$se}{$_}[1] translate to the same handler"
-	      if exists $dispatch->{$se}{$new_key};
-	    $dispatch->{$se}{$new_key} = $dispatch->{$se}{$_};
-	    delete $dispatch->{$se}{$_};
-	  }
-	}
-	$ret{$se} = sub {
-	  if ($dispatch->{$se}{$s->transform_gi($_[1],0)}) {
-	    $dispatch->{$se}{$s->transform_gi($_[1],0)}[0](@_);
-	  }elsif(defined $dispatch->{$se}{''}){
-	    $dispatch->{$se}{''}[0](@_);
-	  }
+  my ($opts, %dispatch, $s);
+  { $opts = 
+      {Start         => 'Start',
+       End           => 'End',
+       handler       => 'handler',
+       #transform_tag,
+       #transform_suffix,
+       #transform,
+      };
+    if ($package->can('config_dispatched')) {
+      my $config_opts = $package->config_dispatch;
+      $opts->{$_} = $config_opts->{$_} foreach keys %$config_opts;
+      if (exists $opts->{transform}) {
+	foreach (qw|transform_tag transform_suffix|) {
+	  carp "both $_ and transform defined in config_dispatched, taking transform"
+	    if exists $opts->{$_};
+	  $opts->{$_} //= $opts->{transform};
 	}
       }
     }
   }
-  $ret{$_} = $dispatch->{handler}{$_}[0] foreach keys %{$dispatch->{handler}};
-  return %ret;
+  {
+    my %opt_reversed = (map {$opts->{$_}, $_} qw|Start End handler|);
+    no strict 'refs';		# perlcritic doesn't like this
+    while (my ($symbol_table_key, $val) = each %{ *{ "$package\::" } }) {
+      local *ENTRY = $val;
+      if (defined $val
+	  and defined *ENTRY{ CODE }
+	  and $symbol_table_key =~ /^(?:(?'what'$opts->{Start}|$opts->{End})_?(?'who'.*)
+				    |(?'who'.*?)_?(?'what'$opts->{handler}))$/x) {
+	my $what = $opt_reversed{$+{what}};
+	carp "the sub $symbol_table_key overrides the handler for $dispatch{$what}{$+{who}}[1]"
+	  if exists $dispatch{$what}{$+{who}};
+	$dispatch{$what}{$+{who}}= [*ENTRY{ CODE }, $symbol_table_key];
+      }
+    }
+  }
+  $s = bless(XML::Parser::Expat->new(@_),$package);
+  {# generating the dispatche from the methods
+    my %real_dispatch;
+    foreach my $se (qw|Start End|) {
+      if (exists $dispatch{$se}){
+	if (exists $opts->{transform_suffix}){
+	  foreach (keys %{$dispatch{$se}}) {
+	    my $new_key= $opts->{transform_key}->($_);
+	    if ($_ ne $new_key) {
+	      carp "$dispatch{$se}{$new_key}[1] and $dispatch{$se}{$_}[1] translate to the same handler"
+		if exists $dispatch{$se}{$new_key};
+	      $dispatch{$se}{$new_key} = $dispatch{$se}{$_};
+	      delete $dispatch{$se}{$_};
+	    }
+	  }
+	}
+	if (exists $opts->{transform_tag}) {
+	  $real_dispatch{$se} = sub {
+	    my $new_tagname = $opts->{transform_tag}($_[1]);
+	    if ($dispatch{$se}{$new_tagname}) {
+	      $dispatch{$se}{$new_tagname}[0](@_);
+	    } elsif (exists $dispatch{$se}{''}) {
+	      $dispatch{$se}{''}[0](@_);
+	    }
+	  };
+	} else {
+	  $real_dispatch{$se} = sub {
+	    if ($dispatch{$se}{$_[1]}) {
+	      $dispatch{$se}{$_[1]}[0](@_);
+	    } elsif (exists $dispatch{$se}{''}) {
+	      $dispatch{$se}{''}[0](@_);
+	    }
+	  };
+	}
+      }
+    }
+
+    foreach (keys %{$dispatch{handler}}) {
+      $real_dispatch{$_} = $dispatch{handler}{$_}[0];
+    }
+
+    $s->setHandlers(%real_dispatch);
+  }
+  return $s;
 }
+
 
 
 __END__
@@ -199,7 +209,7 @@ The following things might break this module so be aware of them:
 .
 *Overwriting C<__gen_dispatch> without calling it in your C<__gen_dispatch> since this is the only method this module has.
 
-*Useing C<AUTOLOAD> without updateing the symbol table before C<new> is called.
+*Using C<AUTOLOAD> without updateing the symbol table before C<new> is called.
 
 *Calling C<set_handlers> on your parser. This module calls C<set_handlers> and if you do, you overwrite the handlers it has installed (why do you use this module anyway).
 
