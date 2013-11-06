@@ -247,7 +247,7 @@ Some Examples:
 
    sub config_dispatched{{
      transform_suffix => sub{my $_ =  $_[1]; s/__/:/g; s/_/-/g; $_},
-     # try to work around the fact that `–' and `:' aren't allowed characters for perl subroutine names
+     # try to work around the fact that `-' and `:' aren't allowed characters for perl subroutine names
    }}
 
 
