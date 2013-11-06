@@ -41,24 +41,41 @@ our $VERSION = 0.901;
 
 =cut
 
-
-
 sub new {
-  no strict 'refs';
-  # perlcritic doesn't like this, but who likes living by the book
   my($package) = shift;
-  my %dispatch;
-  while (my ($symbol_table_key, $val) = each %{ *{ "$package\::" } }) {
-    local *ENTRY = $val;
-    if (defined $val 
-	and defined *ENTRY{ CODE }
-	and $symbol_table_key =~ /^(?:(?'what'Start|End)_?(?'who'.*)
-				  |(?'who'.*?)_?(?'what'handler))$/x){
-      carp "the sub $symbol_table_key overrides the handler for $dispatch{$+{what}}{$+{who}}[1]"
-	if exists $dispatch{$+{what}}{$+{who}};
-      $dispatch{$+{what}}{$+{who}}= [*ENTRY{ CODE }, $symbol_table_key];
+  my ($opts, %dispatch);
+  {my $opts = 
+    {Start         => 'Start',
+     End           => 'End',
+     handler       => 'handler',
+     #transform_tag,
+     #transform_suffix,
+     #transform_both,
+    };
+  if($package->can('config_dispatched')){
+    my $config_opts = $package->config_dispatch;
+    $opts->{$_} = $config_opts->{$_} foreach keys %$config_opts;
+    foreach (qw|transform_tag transform_suffix|){
+      carp "both $_ and transform_both defined in config_dispatched, taking transform_both"
+	if exists $opts->{$_} and exists $opts->{transform_both}
     }
   }
+  my %opt_reversed = (map {$opts->{$_}, $_} qw|Start End handler|);
+
+  no strict 'refs';   # perlcritic doesn't like this
+   while (my ($symbol_table_key, $val) = each %{ *{ "$package\::" } }) {
+     local *ENTRY = $val;
+     if (defined $val
+	 and defined *ENTRY{ CODE }
+	 and $symbol_table_key =~ /^(?:(?'what'$opts->{Start}|$opts->{End})_?(?'who'.*)
+				   |(?'who'.*?)_?(?'what'$opts->{handler}))$/x){
+       my $what = $opt_reversed{$+{what}};
+       carp "the sub $symbol_table_key overrides the handler for $dispatch{$what}{$+{who}}[1]"
+	 if exists $dispatch{$what}{$+{who}};
+       $dispatch{$what}{$+{who}}= [*ENTRY{ CODE }, $symbol_table_key];
+     }
+   }
+ }
   my $s = bless(XML::Parser::Expat->new(@_),$package);
   $s->setHandlers($s->__gen_dispatch(\%dispatch));
   return $s;
