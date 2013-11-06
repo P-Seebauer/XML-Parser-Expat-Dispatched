@@ -5,6 +5,19 @@ use true;
 use parent 'XML::Parser::Expat';
 use Carp;
 
+
+=pod
+
+=head1 Name
+
+XML::Parser::Expat::Dispatched
+
+=head1 Version
+
+Version 0.9
+
+=cut
+
 our $VERSION = 0.9;
 
 sub new {
@@ -68,16 +81,6 @@ sub __gen_dispatch{
 
 
 __END__
-
-=pod
-
-=head1 Name
-
-XML::Parser::Expat::Dispatched
-
-=head1 Version
-
-Version 0.9
 
 =head1 Synopsis
 
