@@ -66,6 +66,7 @@ sub new {
       }
     }
   }
+
   {
     my %opt_reversed = (map {$opts->{$_}, $_} qw|Start End handler|);
     no strict 'refs';		# perlcritic doesn't like this
