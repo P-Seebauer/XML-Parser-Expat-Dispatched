@@ -14,11 +14,11 @@ XML::Parser::Expat::Dispatched
 
 =head1 Version
 
-Version 0.9
+Version 0.901
 
 =cut
 
-our $VERSION = 0.9;
+our $VERSION = 0.901;
 
 sub new {
   no strict 'refs';
