@@ -1,12 +1,15 @@
 package XML::Parser::Expat::Dispatched;
+use strict;
 # ABSTRACT: Automagically dispatches subs to XML::Parser::Expat handlers
 use true;
-use parent XML::Parser::Expat;
+use parent 'XML::Parser::Expat';
 use Carp;
 
 our $VERSION = 0.9;
 
 sub new {
+  no strict 'refs';
+  # perlcritic doesn't like this, but who likes living by the book
   my($package) = shift;
   my %dispatch;
   while (my ($symbol_table_key, $val) = each %{ *{ "$package\::" } }) {
