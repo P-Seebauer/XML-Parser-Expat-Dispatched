@@ -276,9 +276,9 @@ The following things might break this module so be aware of them:
 
 * Your parser will be a L<XML::Parser::Expat|XML::Parser::Expat> so consider checking the methods of this class if you write methods other than handler methods
 .
-*Using C<AUTOLOAD> without updating the symbol table before C<new> is called.
+* Using C<AUTOLOAD> without updating the symbol table before C<new> is called.
 
-*Calling C<set_handlers> on your parser. This module calls C<set_handlers> and if you do, you overwrite the handlers it had installed (why do you use this module anyway?).
+* Calling C<set_handlers> on your parser. This module calls C<set_handlers> and if you do, you overwrite the handlers it had installed (why do you use this module anyway?).
 
 =head1 SEE ALSO
 
