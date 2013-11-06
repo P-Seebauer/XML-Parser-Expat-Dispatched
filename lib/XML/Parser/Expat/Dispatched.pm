@@ -55,7 +55,7 @@ sub new {
        #transform,
       };
     if ($package->can('config_dispatched')) {
-      my $config_opts = $package->config_dispatch;
+      my $config_opts = $package->config_dispatched;
       $opts->{$_} = $config_opts->{$_} foreach keys %$config_opts;
       if (exists $opts->{transform}) {
 	foreach (qw|transform_tag transform_suffix|) {
@@ -89,7 +89,7 @@ sub new {
       if (exists $dispatch{$se}){
 	if (exists $opts->{transform_suffix}){
 	  foreach (keys %{$dispatch{$se}}) {
-	    my $new_key= $opts->{transform_key}->($_);
+	    my $new_key= $opts->{transform_suffix}($s, $_);
 	    if ($_ ne $new_key) {
 	      carp "$dispatch{$se}{$new_key}[1] and $dispatch{$se}{$_}[1] translate to the same handler"
 		if exists $dispatch{$se}{$new_key};
@@ -100,7 +100,7 @@ sub new {
 	}
 	if (exists $opts->{transform_tag}) {
 	  $real_dispatch{$se} = sub {
-	    my $new_tagname = $opts->{transform_tag}($_[1]);
+	    my $new_tagname = $opts->{transform_tag}(@_[0,1]);
 	    if ($dispatch{$se}{$new_tagname}) {
 	      $dispatch{$se}{$new_tagname}[0](@_);
 	    } elsif (exists $dispatch{$se}{''}) {
