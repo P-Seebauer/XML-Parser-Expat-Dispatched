@@ -252,7 +252,7 @@ Some Examples:
 
 
 Note that the allowed characters for perl's subroutine names
-and XML-Identifiers aren't the same, so you might want to use the default handlers or C<transform_gi> in some cases (namespaces, tagnames with a dash).
+and XML-Identifiers aren't the same, so you might want to use the default handlers or the C<transform> options in some cases (namespaces, tagnames with a dash).
 
 =head1 DIAGNOSTICS
 
@@ -266,7 +266,7 @@ can vary from time to time running, so you might want to change your sub names.
 
   %s1 and %s2 translate to the same handler
 
-There is an sub called C<%s1> that translates to the same handler as a sub C<%s2> after applying C<transform_gi>. The sub C<%s1> will be used.
+There is an sub called C<%s1> that translates to the same handler as a sub C<%s2> after applying C<transform_suffix>. The sub C<%s1> will be used.
 
 =head2 INTERNALS
 
