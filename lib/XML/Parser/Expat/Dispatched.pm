@@ -4,6 +4,7 @@ use strict;
 use true;
 use parent 'XML::Parser::Expat';
 use Carp;
+use 5.01; # Named Capture buffers
 
 our $VERSION = 0.952;
 
